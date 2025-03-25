@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Extractor Tool</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 800px;
+            margin-top: 50px;
+        }
+        .char-count {
+            font-size: 14px;
+            color: gray;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="text-center mb-4">Text Extractor Tool</h2>
+        <div class="mb-3">
+            <textarea id="inputText" class="form-control" rows="6" placeholder="Paste your text here..." maxlength="10000" oninput="updateCharCount()"></textarea>
+            <span id="charCount" class="char-count">0 / 10000 characters</span>
+        </div>
+        <div class="mb-3">
+            <select id="extractType" class="form-select">
+                <option value="email">Emails</option>
+                <option value="phone">Phone Numbers</option>
+                <option value="website">Websites</option>
+            </select>
+        </div>
+        <button class="btn btn-primary w-100" onclick="extractData()">Extract</button>
+        <div class="mt-3">
+            <h5>Extracted Data:</h5>
+            <textarea id="outputText" class="form-control" rows="6" readonly></textarea>
+        </div>
+        <div class="mt-3 text-center">
+            <button class="btn btn-success" onclick="downloadFile('txt')">Download as TXT</button>
+            <button class="btn btn-info" onclick="downloadFile('csv')">Download as CSV</button>
+        </div>
+    </div>
+    
+    <script>
+        function extractData() {
+            const text = document.getElementById("inputText").value.trim();
+            const extractType = document.getElementById("extractType").value;
+            let regex;
+            
+            if (extractType === "email") {
+                regex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+            } else if (extractType === "phone") {
+                regex = /\b(?:\+\d{1,3}\s?)?(\d{10})\b/g;
+            } else if (extractType === "website") {
+                regex = /\b(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\/\S*)?\b/g;
+            }
+            
+            const matches = text.match(regex) || [];
+            document.getElementById("outputText").value = matches.join("\n");
+        }
+        
+        function downloadFile(type) {
+            const extractedData = document.getElementById("outputText").value.trim();
+            if (!extractedData) {
+                alert("No extracted data to download!");
+                return;
+            }
+            
+            let blob, filename;
+            if (type === 'csv') {
+                const csvContent = extractedData.split("\n").map(line => `"${line}"`).join("\n");
+                blob = new Blob([csvContent], { type: 'text/csv' });
+                filename = 'extracted_data.csv';
+            } else {
+                blob = new Blob([extractedData], { type: 'text/plain' });
+                filename = 'extracted_data.txt';
+            }
+            
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        function updateCharCount() {
+            const textArea = document.getElementById("inputText");
+            const charCount = textArea.value.length;
+            document.getElementById("charCount").innerText = `${charCount} / 10000 characters`;
+        }
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
